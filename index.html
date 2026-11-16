@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Grades de Fotos e PDFs - Imposição Profissional</title>
+    <title>Gerador de Grades de Fotos e PDFs - Imposição Profissional Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- pdfmake -->
@@ -27,25 +27,50 @@
             z-index: 30;
             border-radius: 50%;
         }
+        .crop-marks {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .corner-tl { position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-top: 1px solid #9ca3af; border-left: 1px solid #9ca3af; }
+        .corner-tr { position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-top: 1px solid #9ca3af; border-right: 1px solid #9ca3af; }
+        .corner-bl { position: absolute; bottom: 0; left: 0; width: 12px; height: 12px; border-bottom: 1px solid #9ca3af; border-left: 1px solid #9ca3af; }
+        .corner-br { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-bottom: 1px solid #9ca3af; border-right: 1px solid #9ca3af; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
 
     <!-- Cabeçalho -->
     <header class="bg-indigo-600 text-white shadow-md py-4 px-6 mb-6">
-        <h1 class="text-2xl font-bold">Gerador de Layout Gráfico - Fotos e PDFs</h1>
-        <p class="text-indigo-200 text-sm">Controle Global Único para Multiplicação, Cor de Fundo e Tamanho Personalizado</p>
+        <h1 class="text-2xl font-bold">Gerador de Layout Gráfico - Estilo Illustrator Pro</h1>
+        <p class="text-indigo-200 text-sm">Imposição, Multiplicador, Margem 5mm e Gabarito de 2 Páginas</p>
     </header>
 
     <!-- Conteúdo Principal -->
-    <main class="max-w-[1600px] mx-auto px-4 flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6 w-full pb-10 items-start">
+    <main class="max-w-[1700px] mx-auto px-4 flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6 w-full pb-10 items-start">
         
         <!-- Painel de Controles Fixo (Sticky) -->
-        <div class="bg-white p-6 rounded-xl shadow-md space-y-5 lg:col-span-1 sticky top-6">
-            <h2 class="text-lg font-semibold border-b pb-2 text-indigo-700">1. Configurações</h2>
+        <div class="bg-white p-6 rounded-xl shadow-md space-y-5 lg:col-span-1 sticky top-6 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-lg font-semibold border-b pb-2 text-indigo-700">1. Configurações & Prancheta</h2>
+
+            <!-- FOTO OU PDF DA ARTE (NO TOPO) -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="block text-sm font-medium text-gray-700">Fotos ou PDFs da Arte</label>
+                    <button id="clearAllFilesBtn" class="hidden text-xs text-red-600 hover:text-red-800 font-semibold transition">🗑️ Apagar Tudo</button>
+                </div>
+                <div id="dropZone" class="border-2 border-dashed border-indigo-300 bg-indigo-50/50 rounded-xl p-4 text-center cursor-pointer hover:bg-indigo-50 transition">
+                    <svg class="mx-auto h-8 w-8 text-indigo-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-xs font-medium text-indigo-700">Arraste múltiplos arquivos ou PDFs</p>
+                    <input type="file" id="imageInput" multiple accept="image/*,application/pdf" class="hidden">
+                </div>
+            </div>
 
             <!-- Escolha do Papel -->
-            <div>
+            <div class="border-t pt-3">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tamanho do Papel</label>
                 <select id="paperSize" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     <option value="A4">A4 (210 x 297 mm)</option>
@@ -81,13 +106,11 @@
                 </select>
             </div>
 
-            <!-- Botão de Tamanho Personalizado -->
+            <!-- Botão de Tamanho Personalizado / Multiplicador -->
             <div class="border-t pt-3">
                 <button id="toggleCustomSizeBtn" class="w-full bg-gray-100 border border-indigo-300 text-indigo-700 font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition duration-200 text-sm flex items-center justify-center gap-2">
-                    <span>📐</span> <span id="customBtnText">Ativar Tamanho Personalizado</span>
+                    <span>📐</span> <span id="customBtnText">Ativar Modo Multiplicador</span>
                 </button>
-
-                <!-- Painel de Campos Personalizados -->
                 <div id="customSizePanel" class="hidden mt-3 space-y-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -100,64 +123,68 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Quantidade de Cópias (Opcional)</label>
-                        <input type="number" id="customQty" min="1" placeholder="Ex: 100 (vazio = 1 no meio)" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Qtd Total Necessária</label>
+                        <input type="number" id="customQty" min="1" placeholder="Ex: 100 cópias" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
                     </div>
                 </div>
             </div>
 
-            <!-- Arrastar e Soltar (Dropzone) -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fotos ou PDFs da Cliente</label>
-                <div id="dropZone" class="border-2 border-dashed border-indigo-300 bg-indigo-50/50 rounded-xl p-6 text-center cursor-pointer hover:bg-indigo-50 transition">
-                    <svg class="mx-auto h-10 w-10 text-indigo-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <p class="text-sm font-medium text-indigo-700">Arraste imagens ou PDFs aqui</p>
-                    <p class="text-xs text-gray-500 mt-1">ou clique para procurar no computador</p>
-                    <input type="file" id="imageInput" multiple accept="image/*,application/pdf" class="hidden">
+            <!-- Ferramentas Pro: Sangria / Escala Interna -->
+            <div class="border-t pt-3 space-y-3">
+                <h3 class="text-sm font-semibold text-indigo-700">🎨 Sangria & Escala Interna</h3>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Escala da Arte (%)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="range" id="scaleRange" min="50" max="100" value="100" class="w-full accent-indigo-600">
+                        <span id="scaleValue" class="text-xs font-bold text-indigo-700 w-10 text-right">100%</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Cor de Fundo da Sangria</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="bleedBgColor" value="#ffffff" class="w-10 h-8 border border-gray-300 rounded cursor-pointer p-0.5">
+                        <input type="text" id="bleedBgColorText" value="#FFFFFF" class="flex-grow border border-gray-300 rounded p-1.5 text-xs uppercase">
+                    </div>
                 </div>
             </div>
 
             <!-- Botão de Gerar PDF -->
             <button id="generatePdfBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 shadow disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                Gerar e Baixar PDF Pronto
+                Gerar PDF Pronto
             </button>
         </div>
 
-        <!-- Painel de Preview (Grande) -->
-        <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-3 flex flex-col">
+        <!-- Painel de Preview -->
+        <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-3 flex flex-col relative min-h-[800px]">
             <div class="flex justify-between items-center border-b pb-2 mb-4">
-                <h2 class="text-lg font-semibold text-indigo-700">2. Preview Ampliado & Ferramentas</h2>
+                <h2 class="text-lg font-semibold text-indigo-700">2. Prancheta de Trabalho</h2>
                 <span id="statsInfo" class="text-sm font-medium text-gray-600">Nenhum arquivo carregado</span>
             </div>
 
-            <p class="text-xs text-indigo-600 mb-3 bg-indigo-50 p-2 rounded border border-indigo-100">
-                💡 <strong>Dica:</strong> Como é uma multiplicação de arte única, as ferramentas de edição aparecem de forma limpa apenas no primeiro item e se aplicam a todos.
+            <p id="cursorTip" class="text-xs text-indigo-600 mb-3 bg-indigo-50 p-2 rounded border border-indigo-100">
+                💡 <strong>Dica:</strong> No Modo Multiplicador, geram-se exatamente 2 páginas (Página 1 com marcações de corte nos cantos e Página 2 totalmente sem linhas).
             </p>
 
-            <!-- Área de Preview grande com scroll -->
-            <div id="previewContainer" class="flex-grow bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-start min-h-[700px] overflow-auto gap-8">
+            <!-- Área de Preview -->
+            <div id="previewContainer" class="flex-grow bg-gray-200 border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-start overflow-auto gap-8 relative select-none">
                 <div class="text-center text-gray-400 my-auto">
                     <svg class="mx-auto h-16 w-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2.000 2.000 0 012.828 0L16 16m-2-2l1.586-1.586a2.000 2.000 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    <p class="text-base">Envie fotos ou PDFs ao lado para visualizar a montagem.</p>
+                    <p class="text-base">Envie as artes no topo do painel esquerdo para visualizar as páginas.</p>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal de Corte Estilo Tesoura -->
+    <!-- Modal de Corte (Tesoura) -->
     <div id="cropModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 flex flex-col space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-lg font-bold text-indigo-700">✂️ Recorte Interativo (Estilo Tesoura)</h3>
                 <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
             </div>
-            <p class="text-xs text-gray-600">Arraste as bordas ou cantos para selecionar exatamente o que deseja manter na foto.</p>
-            
             <div id="cropAreaWrapper" class="relative w-full h-[380px] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center select-none">
                 <img id="cropModalImg" class="absolute max-h-full max-w-full object-contain pointer-events-none" src="" alt="Recorte">
                 <div id="cropBox" class="absolute border-2 border-indigo-400 bg-indigo-500/10 cursor-move" style="left: 50px; top: 50px; width: 200px; height: 250px;">
@@ -167,15 +194,14 @@
                     <div class="crop-handle -bottom-1.5 -right-1.5 cursor-nesw-resize" data-handle="br"></div>
                 </div>
             </div>
-
             <div class="flex justify-end space-x-3 pt-2 border-t">
-                <button id="cancelCropBtn" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">Cancelar</button>
-                <button id="confirmCropBtn" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">Confirmar Recorte</button>
+                <button id="cancelCropBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Cancelar</button>
+                <button id="confirmCropBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">Confirmar Recorte</button>
             </div>
         </div>
     </div>
 
-    <!-- Script de Lógica -->
+    <!-- Script Principal -->
     <script>
         const papers = {
             A4: { width: 210, height: 297, name: 'A4' },
@@ -196,22 +222,25 @@
 
         let loadedImages = []; 
         let editingIndex = null;
-        let isCustomSizeActive = false;
 
         const imageInput = document.getElementById('imageInput');
         const dropZone = document.getElementById('dropZone');
+        const clearAllFilesBtn = document.getElementById('clearAllFilesBtn');
         const paperSizeSelect = document.getElementById('paperSize');
         const photoSizeSelect = document.getElementById('photoSize');
         const previewContainer = document.getElementById('previewContainer');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const statsInfo = document.getElementById('statsInfo');
+        const cursorTip = document.getElementById('cursorTip');
 
-        // Controles de Cor
         const sheetBgColor = document.getElementById('sheetBgColor');
         const sheetBgColorText = document.getElementById('sheetBgColorText');
         const eyeDropperBtn = document.getElementById('eyeDropperBtn');
+        const bleedBgColor = document.getElementById('bleedBgColor');
+        const bleedBgColorText = document.getElementById('bleedBgColorText');
+        const scaleRange = document.getElementById('scaleRange');
+        const scaleValue = document.getElementById('scaleValue');
 
-        // Controles Customizados
         const toggleCustomSizeBtn = document.getElementById('toggleCustomSizeBtn');
         const customBtnText = document.getElementById('customBtnText');
         const customSizePanel = document.getElementById('customSizePanel');
@@ -219,7 +248,7 @@
         const customHeight = document.getElementById('customHeight');
         const customQty = document.getElementById('customQty');
 
-        // Elementos do Modal de Tesoura
+        // Modal Tesoura
         const cropModal = document.getElementById('cropModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const cancelCropBtn = document.getElementById('cancelCropBtn');
@@ -233,99 +262,96 @@
         let activeHandle = null;
         let startMouseX, startMouseY, startBoxX, startBoxY, startBoxW, startBoxH;
 
-        // Sincronização de cor
-        sheetBgColor.addEventListener('input', (e) => {
-            sheetBgColorText.value = e.target.value;
+        sheetBgColor.addEventListener('input', (e) => { sheetBgColorText.value = e.target.value; updatePreview(); });
+        sheetBgColorText.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { sheetBgColor.value = e.target.value; updatePreview(); } });
+        bleedBgColor.addEventListener('input', (e) => { bleedBgColorText.value = e.target.value; updatePreview(); });
+        bleedBgColorText.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { bleedBgColor.value = e.target.value; updatePreview(); } });
+
+        scaleRange.addEventListener('input', (e) => {
+            scaleValue.textContent = e.target.value + '%';
             updatePreview();
         });
-        sheetBgColorText.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                sheetBgColor.value = e.target.value;
-                updatePreview();
-            }
-        });
 
-        // Conta-gotas (EyeDropper API)
-        if (!window.EyeDropper) {
-            eyeDropperBtn.style.display = 'none';
-        } else {
+        if (window.EyeDropper) {
             eyeDropperBtn.addEventListener('click', async () => {
                 try {
-                    const eyeDropper = new EyeDropper();
-                    const result = await eyeDropper.open();
-                    if (result && result.sRGBHex) {
-                        sheetBgColor.value = result.sRGBHex;
-                        sheetBgColorText.value = result.sRGBHex;
+                    const res = await new EyeDropper().open();
+                    if (res && res.sRGBHex) {
+                        sheetBgColor.value = res.sRGBHex;
+                        sheetBgColorText.value = res.sRGBHex;
                         updatePreview();
                     }
-                } catch (e) {
-                    console.log('Conta-gotas cancelado ou não suportado.');
-                }
+                } catch(e) {}
             });
+        } else {
+            eyeDropperBtn.style.display = 'none';
         }
 
-        // Alternar Painel Personalizado
         toggleCustomSizeBtn.addEventListener('click', () => {
             isCustomSizeActive = !isCustomSizeActive;
             if (isCustomSizeActive) {
                 customSizePanel.classList.remove('hidden');
-                customBtnText.textContent = 'Desativar Tamanho Personalizado';
-                toggleCustomSizeBtn.classList.add('bg-indigo-100', 'border-indigo-500');
+                customBtnText.textContent = 'Desativar Modo Multiplicador';
                 photoSizeSelect.disabled = true;
             } else {
                 customSizePanel.classList.add('hidden');
-                customBtnText.textContent = 'Ativar Tamanho Personalizado';
-                toggleCustomSizeBtn.classList.remove('bg-indigo-100', 'border-indigo-500');
+                customBtnText.textContent = 'Ativar Modo Multiplicador';
                 photoSizeSelect.disabled = false;
             }
             updatePreview();
         });
 
-        customWidth.addEventListener('input', updatePreview);
-        customHeight.addEventListener('input', updatePreview);
-        customQty.addEventListener('input', updatePreview);
+        [customWidth, customHeight, customQty].forEach(el => el.addEventListener('input', updatePreview));
 
-        // Drag and Drop Events
-        dropZone.addEventListener('click', () => imageInput.click());
+        dropZone.onclick = () => imageInput.click();
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-indigo-100'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-indigo-100'));
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('bg-indigo-100');
-            if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
         });
+        imageInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
 
-        imageInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) handleFiles(e.target.files);
-        });
+        clearAllFilesBtn.onclick = () => {
+            loadedImages = [];
+            clearAllFilesBtn.classList.add('hidden');
+            updatePreview();
+            generatePdfBtn.disabled = true;
+        };
 
         async function handleFiles(files) {
             for (let file of files) {
                 if (file.type === 'application/pdf') {
                     await processPdfFile(file);
                 } else if (file.type.startsWith('image/')) {
-                    await processImageFile(file);
+                    await processImageFile(file, file.name);
                 }
             }
+            if (loadedImages.length > 0) clearAllFilesBtn.classList.remove('hidden');
             updatePreview();
             generatePdfBtn.disabled = loadedImages.length === 0;
         }
 
-        function processImageFile(file) {
-            return new Promise((resolve) => {
+        function processImageFile(file, name = 'Imagem') {
+            return new Promise(resolve => {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = e => {
                     const imgObj = new Image();
-                    imgObj.src = event.target.result;
+                    imgObj.src = e.target.result;
                     imgObj.onload = () => {
                         loadedImages.push({
-                            src: event.target.result,
+                            name: name,
+                            src: e.target.result,
+                            originalSrc: e.target.result,
+                            naturalW: imgObj.naturalWidth,
+                            naturalH: imgObj.naturalHeight,
                             mode: 'real',
                             croppedSrc: null,
                             isRotated: false,
                             flipped: false,
-                            posX: 50, 
-                            posY: 50  
+                            offsetX: 0,
+                            offsetY: 0
                         });
                         resolve();
                     };
@@ -335,28 +361,27 @@
         }
 
         async function processPdfFile(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            
+            const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const viewport = page.getViewport({ scale: 2.0 });
                 const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                canvas.width = viewport.width; canvas.height = viewport.height;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
                 
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                 loadedImages.push({
+                    name: `${file.name} - Pág ${i}`,
                     src: dataUrl,
+                    originalSrc: dataUrl,
+                    naturalW: viewport.width,
+                    naturalH: viewport.height,
                     mode: 'real',
                     croppedSrc: null,
                     isRotated: false,
                     flipped: false,
-                    posX: 50,
-                    posY: 50
+                    offsetX: 0,
+                    offsetY: 0
                 });
             }
         }
@@ -364,274 +389,290 @@
         paperSizeSelect.addEventListener('change', updatePreview);
         photoSizeSelect.addEventListener('change', updatePreview);
 
-        function getBasePhotoSize(isRotated = false) {
-            let w, h;
+        function getBasePhotoSize() {
             if (isCustomSizeActive) {
-                w = parseFloat(customWidth.value) * 10 || 100;
-                h = parseFloat(customHeight.value) * 10 || 150;
-            } else {
-                const base = photos[photoSizeSelect.value];
-                w = base.width;
-                h = base.height;
+                return { width: parseFloat(customWidth.value)*10 || 100, height: parseFloat(customHeight.value)*10 || 150 };
             }
-            return isRotated ? { width: h, height: w } : { width: w, height: h };
+            const b = photos[photoSizeSelect.value];
+            return { width: b.width, height: b.height };
         }
 
-        function calculateLayout(isRotated = false) {
+        function calculateLayout() {
             const paper = papers[paperSizeSelect.value];
-            const pSize = getBasePhotoSize(isRotated);
+            const pSize = getBasePhotoSize();
             
-            let colsNormal = Math.floor(paper.width / pSize.width);
-            let rowsNormal = Math.floor(paper.height / pSize.height);
-            let totalNormal = Math.max(1, colsNormal * rowsNormal);
+            const margin = isCustomSizeActive ? 5 : 0;
+            const usableWidth = paper.width - (margin * 2);
+            const usableHeight = paper.height - (margin * 2);
 
-            let colsRotated = Math.floor(paper.width / pSize.height);
-            let rowsRotated = Math.floor(paper.height / pSize.width);
-            let totalRotated = Math.max(1, colsRotated * rowsRotated);
-
-            let bestCols = colsNormal;
-            let bestRows = rowsNormal;
-            let finalPhotoWidth = pSize.width;
-            let finalPhotoHeight = pSize.height;
-
-            if (totalRotated > totalNormal) {
-                bestCols = colsRotated;
-                bestRows = rowsRotated;
-                finalPhotoWidth = pSize.height;
-                finalPhotoHeight = pSize.width;
+            let cols = Math.max(1, Math.floor(usableWidth / pSize.width));
+            let rows = Math.max(1, Math.floor(usableHeight / pSize.height));
+            
+            if (isCustomSizeActive && (!customQty.value || parseInt(customQty.value) <= 1)) {
+                cols = 1; rows = 1;
             }
 
-            const qtyVal = parseInt(customQty.value);
-            const isSingleMode = isCustomSizeActive && (!qtyVal || qtyVal <= 0);
+            const perPage = cols * rows;
+            const totalGridWidth = cols * pSize.width;
+            const totalGridHeight = rows * pSize.height;
 
-            if (isSingleMode) {
-                bestCols = 1;
-                bestRows = 1;
-                finalPhotoWidth = pSize.width;
-                finalPhotoHeight = pSize.height;
-            }
+            const marginLeft = margin + Math.max(0, (usableWidth - totalGridWidth) / 2);
+            const marginTop = margin + Math.max(0, (usableHeight - totalGridHeight) / 2);
 
-            const perPage = Math.max(1, bestCols * bestRows);
-            
-            const totalGridWidth = bestCols * finalPhotoWidth;
-            const totalGridHeight = bestRows * finalPhotoHeight;
-            const marginLeft = Math.max(0, (paper.width - totalGridWidth) / 2);
-            const marginTop = Math.max(0, (paper.height - totalGridHeight) / 2);
-
-            return { 
-                paper, 
-                cols: bestCols, 
-                rows: bestRows, 
-                perPage, 
-                photoW: finalPhotoWidth, 
-                photoH: finalPhotoHeight, 
-                marginLeft, 
-                marginTop,
-                isSingleMode
-            };
+            return { paper, cols, rows, perPage, photoW: pSize.width, photoH: pSize.height, marginLeft, marginTop };
         }
 
-        function getPhysicallyRotatedImage(imgData) {
+        async function getRotatedImage(imgData) {
             return new Promise((resolve) => {
                 const img = new Image();
-                let sourceSrc = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
-                img.src = sourceSrc;
+                let activeSource = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
+                img.src = activeSource;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = img.height;
-                    canvas.height = img.width;
+                    canvas.width = img.height; canvas.height = img.width;
                     const ctx = canvas.getContext('2d');
-
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.save();
                     ctx.translate(canvas.width / 2, canvas.height / 2);
                     ctx.rotate(Math.PI / 2);
-                    if (imgData.flipped) {
-                        ctx.scale(-1, 1);
-                    }
+                    if (imgData.flipped) ctx.scale(-1, 1);
                     ctx.drawImage(img, -img.width / 2, -img.height / 2);
-                    ctx.restore();
-
                     resolve(canvas.toDataURL('image/jpeg', 0.95));
                 };
             });
         }
 
         async function updatePreview() {
-            if (loadedImages.length === 0) return;
+            if (loadedImages.length === 0) {
+                previewContainer.innerHTML = `
+                    <div class="text-center text-gray-400 my-auto">
+                        <svg class="mx-auto h-16 w-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2.000 2.000 0 012.828 0L16 16m-2-2l1.586-1.586a2.000 2.000 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-base">Envie as artes no topo do painel esquerdo para visualizar as páginas.</p>
+                    </div>`;
+                clearAllFilesBtn.classList.add('hidden');
+                return;
+            }
 
-            const sampleRotated = loadedImages[0].isRotated || false;
-            const layout = calculateLayout(sampleRotated);
+            clearAllFilesBtn.classList.remove('hidden');
+            const layout = calculateLayout();
             previewContainer.innerHTML = '';
 
             const qtyVal = parseInt(customQty.value);
-            const totalItemsToRender = (isCustomSizeActive && qtyVal > 0) ? qtyVal : loadedImages.length;
-            const totalPages = Math.ceil(totalItemsToRender / layout.perPage);
-            const bgColor = sheetBgColor.value;
+            const isMultiplicatorMode = isCustomSizeActive && qtyVal > 0;
 
-            statsInfo.textContent = `${totalItemsToRender} itens | ${layout.perPage} por folha ${layout.paper.name} - ${totalPages} pág.`;
+            if (isMultiplicatorMode) {
+                const neededSheets = Math.ceil(qtyVal / layout.perPage);
+                statsInfo.textContent = `Modo Multiplicador (Margem 5mm) | Cabem ${layout.perPage} por folha | Total Qtd: ${qtyVal} un. | Necessário: ${neededSheets} folha(s) (Exibindo 2 pág. de gabarito)`;
+            } else {
+                const totalPages = Math.ceil(loadedImages.length / layout.perPage);
+                statsInfo.textContent = `Total Arquivos: ${loadedImages.length} | Páginas: ${totalPages} (${layout.perPage} por folha ${layout.paper.name})`;
+            }
 
-            const scale = 3.2; 
+            const totalViews = isMultiplicatorMode ? 2 : Math.ceil(loadedImages.length / layout.perPage);
+            const scaleFactor = 3.2; 
 
-            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                const sheetDiv = document.createElement('div');
-                sheetDiv.className = 'sheet-preview border border-gray-300 relative overflow-hidden';
-                sheetDiv.style.backgroundColor = bgColor;
-                
-                sheetDiv.style.width = `${layout.paper.width * scale}px`;
-                sheetDiv.style.height = `${layout.paper.height * scale}px`;
-                sheetDiv.style.boxSizing = 'border-box';
+            for (let viewIndex = 0; viewIndex < totalViews; viewIndex++) {
+                const sheet = document.createElement('div');
+                sheet.className = 'sheet-preview border border-gray-300 relative overflow-hidden mb-8';
+                sheet.style.backgroundColor = sheetBgColor.value;
+                sheet.style.width = `${layout.paper.width * scaleFactor}px`;
+                sheet.style.height = `${layout.paper.height * scaleFactor}px`;
 
-                const gridDiv = document.createElement('div');
-                gridDiv.className = 'absolute grid';
-                gridDiv.style.left = `${layout.marginLeft * scale}px`;
-                gridDiv.style.top = `${layout.marginTop * scale}px`;
-                gridDiv.style.width = `${(layout.cols * layout.photoW) * scale}px`;
-                gridDiv.style.height = `${(layout.rows * layout.photoH) * scale}px`;
-                gridDiv.style.gridTemplateColumns = `repeat(${layout.cols}, 1fr)`;
-                gridDiv.style.gridTemplateRows = `repeat(${layout.rows}, 1fr)`;
-                gridDiv.style.gap = '0px';
-
-                const startIndex = pageIndex * layout.perPage;
-                const endIndex = Math.min(startIndex + layout.perPage, totalItemsToRender);
-
-                for (let i = startIndex; i < endIndex; i++) {
-                    const imgData = loadedImages[0]; // Sempre usa a primeira imagem como base (multiplicação da mesma arte)
-                    const itemLayout = calculateLayout(imgData.isRotated || false);
-                    
-                    const imgBox = document.createElement('div');
-                    imgBox.className = 'flex items-center justify-center overflow-hidden relative group cursor-grab active:cursor-grabbing select-none';
-                    imgBox.style.border = '0.5px solid #d1d5db';
-                    imgBox.style.boxSizing = 'border-box';
-                    
-                    const img = document.createElement('img');
-                    let imgSrc = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
-                    
-                    if (imgData.isRotated) {
-                        getPhysicallyRotatedImage(imgData).then(res => {
-                            img.src = res;
-                        });
-                    } else {
-                        img.src = imgSrc;
-                        if (imgData.flipped) {
-                            img.style.transform = 'scaleX(-1)';
-                        } else {
-                            img.style.transform = 'none';
-                        }
-                    }
-
-                    if (layout.isSingleMode) {
-                        img.className = 'max-w-full max-h-full object-contain';
-                    } else {
-                        img.className = 'w-full h-full object-fill';
-                    }
-                    
-                    imgBox.appendChild(img);
-
-                    // ADICIONA OS BOTÕES DE CONTROLE APENAS NO PRIMEIRO ITEM DA FOLHA (Índice 0)
-                    if (i === 0) {
-                        const toolbar = document.createElement('div');
-                        toolbar.className = 'absolute top-1 right-1 flex flex-col bg-white/95 rounded shadow overflow-hidden z-10 text-[9px] font-medium border border-gray-200';
-
-                        const row1 = document.createElement('div');
-                        row1.className = 'flex border-b border-gray-200';
-
-                        const row2 = document.createElement('div');
-                        row2.className = 'flex';
-
-                        const btnRotate = document.createElement('button');
-                        btnRotate.className = 'px-1.5 py-1 text-gray-700 hover:bg-gray-100 transition border-r border-gray-200';
-                        btnRotate.textContent = '🔄 Girar';
-                        btnRotate.onclick = async (e) => {
-                            e.stopPropagation();
-                            imgData.isRotated = !imgData.isRotated;
-                            if (imgData.isRotated) {
-                                imgData.src = await getPhysicallyRotatedImage(imgData);
-                                imgData.croppedSrc = null;
-                            }
-                            updatePreview();
-                        };
-
-                        const btnFlip = document.createElement('button');
-                        btnFlip.className = 'px-1.5 py-1 text-gray-700 hover:bg-gray-100 transition';
-                        btnFlip.textContent = '🪞 Inverter';
-                        btnFlip.onclick = (e) => {
-                            e.stopPropagation();
-                            imgData.flipped = !imgData.flipped;
-                            updatePreview();
-                        };
-
-                        const btnReal = document.createElement('button');
-                        btnReal.className = `px-2 py-1 transition border-r border-gray-200 ${imgData.mode === 'real' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
-                        btnReal.textContent = 'Tam. Real';
-                        btnReal.onclick = (e) => { e.stopPropagation(); imgData.mode = 'real'; updatePreview(); };
-
-                        const btnFit = document.createElement('button');
-                        btnFit.className = `px-2 py-1 transition border-r border-gray-200 ${imgData.mode === 'fit' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
-                        btnFit.textContent = 'Ajustar';
-                        btnFit.onclick = (e) => { e.stopPropagation(); imgData.mode = 'fit'; updatePreview(); };
-
-                        const btnCrop = document.createElement('button');
-                        btnCrop.className = `px-2 py-1 transition ${imgData.mode === 'crop' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
-                        btnCrop.textContent = '✂️ Tesoura';
-                        btnCrop.onclick = (e) => { e.stopPropagation(); openCropModal(0); };
-
-                        row1.appendChild(btnRotate);
-                        row1.appendChild(btnFlip);
-
-                        row2.appendChild(btnReal);
-                        row2.appendChild(btnFit);
-                        row2.appendChild(btnCrop);
-
-                        toolbar.appendChild(row1);
-                        toolbar.appendChild(row2);
-                        imgBox.appendChild(toolbar);
-                    }
-
-                    gridDiv.appendChild(imgBox);
+                if (isMultiplicatorMode) {
+                    const labelBadge = document.createElement('div');
+                    labelBadge.className = 'absolute top-3 left-3 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded z-20 shadow';
+                    labelBadge.textContent = viewIndex === 0 ? '📄 PÁGINA 1: COM LINHAS DE CORTE NOS CANTOS' : '📄 PÁGINA 2: SEM LINHAS';
+                    sheet.appendChild(labelBadge);
                 }
 
-                sheetDiv.appendChild(gridDiv);
-                previewContainer.appendChild(sheetDiv);
+                const grid = document.createElement('div');
+                grid.className = 'absolute grid';
+                grid.style.left = `${layout.marginLeft * scaleFactor}px`;
+                grid.style.top = `${layout.marginTop * scaleFactor}px`;
+                grid.style.width = `${(layout.cols * layout.photoW) * scaleFactor}px`;
+                grid.style.height = `${(layout.rows * layout.photoH) * scaleFactor}px`;
+                grid.style.gridTemplateColumns = `repeat(${layout.cols}, 1fr)`;
+                grid.style.gridTemplateRows = `repeat(${layout.rows}, 1fr)`;
+
+                const startIndex = isMultiplicatorMode ? 0 : (viewIndex * layout.perPage);
+                const endIndex = isMultiplicatorMode ? layout.perPage : Math.min(startIndex + layout.perPage, loadedImages.length);
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    const dataIndex = isMultiplicatorMode ? 0 : i;
+                    const imgData = loadedImages[dataIndex];
+                    if (!imgData) continue;
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'flex items-center justify-center relative overflow-hidden group';
+                    cell.style.backgroundColor = bleedBgColor.value;
+                    
+                    if (isMultiplicatorMode && viewIndex === 1) {
+                        cell.style.border = 'none';
+                    } else {
+                        cell.style.border = '0.5px dashed #cbd5e1';
+                        cell.className += ' cursor-grab active:cursor-grabbing';
+                    }
+
+                    if (!isMultiplicatorMode || viewIndex === 0) {
+                        const cropMarks = document.createElement('div');
+                        cropMarks.className = 'crop-marks';
+                        cropMarks.innerHTML = `
+                            <div class="corner-tl"></div>
+                            <div class="corner-tr"></div>
+                            <div class="corner-bl"></div>
+                            <div class="corner-br"></div>
+                        `;
+                        cell.appendChild(cropMarks);
+                    }
+
+                    const imgWrapper = document.createElement('div');
+                    const scalePct = parseInt(scaleRange.value) / 100;
+                    imgWrapper.style.width = `${scalePct * 100}%`;
+                    imgWrapper.style.height = `${scalePct * 100}%`;
+                    imgWrapper.className = 'flex items-center justify-center overflow-hidden relative w-full h-full';
+
+                    const img = document.createElement('img');
+                    let imgSrc = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
+
+                    if (imgData.isRotated) {
+                        imgSrc = await getRotatedImage(imgData);
+                        img.src = imgSrc;
+                    } else {
+                        img.src = imgSrc;
+                        img.style.transform = imgData.flipped ? 'scaleX(-1)' : 'none';
+                    }
+
+                    // APLICAÇÃO DOS MODOS INDEPENDENTES DE ESTIRAMENTO
+                    if (imgData.mode === 'fit') {
+                        img.className = 'absolute object-contain select-none pointer-events-none';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.left = '0px';
+                        img.style.top = '0px';
+                    } else if (imgData.mode === 'stretchH') {
+                        // Estica preenchendo toda a largura horizontal
+                        img.className = 'absolute object-fill select-none pointer-events-none';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.left = '0px';
+                        img.style.top = '0px';
+                    } else if (imgData.mode === 'stretchV') {
+                        // Estica preenchendo toda a altura vertical
+                        img.className = 'absolute object-fill select-none pointer-events-none';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.left = '0px';
+                        img.style.top = '0px';
+                    } else {
+                        const cellW = layout.photoW * scaleFactor * scalePct;
+                        const cellH = layout.photoH * scaleFactor * scalePct;
+                        const natW = imgData.naturalW || 1000;
+                        const natH = imgData.naturalH || 1000;
+                        const ratio = Math.min(cellW / natW, cellH / natH);
+                        
+                        const renderW = natW * ratio;
+                        const renderH = natH * ratio;
+
+                        img.className = 'absolute object-contain select-none pointer-events-none';
+                        img.style.width = `${renderW}px`;
+                        img.style.height = `${renderH}px`;
+                        img.style.left = `${((cellW - renderW) / 2) + (imgData.offsetX || 0)}px`;
+                        img.style.top = `${((cellH - renderH) / 2) + (imgData.offsetY || 0)}px`;
+                    }
+
+                    imgWrapper.appendChild(img);
+                    cell.appendChild(imgWrapper);
+
+                    if (imgData.mode === 'real') {
+                        cell.onmousedown = (e) => {
+                            e.stopPropagation();
+                            const startX = e.clientX;
+                            const startY = e.clientY;
+                            const origX = imgData.offsetX || 0;
+                            const origY = imgData.offsetY || 0;
+
+                            function onMouseMove(ev) {
+                                imgData.offsetX = origX + (ev.clientX - startX);
+                                imgData.offsetY = origY + (ev.clientY - startY);
+                                updatePreview();
+                            }
+
+                            function onMouseUp() {
+                                window.removeEventListener('mousemove', onMouseMove);
+                                window.removeEventListener('mouseup', onMouseUp);
+                            }
+
+                            window.addEventListener('mousemove', onMouseMove);
+                            window.addEventListener('mouseup', onMouseUp);
+                        };
+                    }
+
+                    if (!isMultiplicatorMode) {
+                        const itemDeleteBtn = document.createElement('button');
+                        itemDeleteBtn.className = 'absolute top-1 left-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow hover:bg-red-700 opacity-0 group-hover:opacity-100 transition z-20 cursor-pointer';
+                        itemDeleteBtn.textContent = '×';
+                        itemDeleteBtn.title = 'Apagar este arquivo';
+                        itemDeleteBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            loadedImages.splice(dataIndex, 1);
+                            updatePreview();
+                            generatePdfBtn.disabled = loadedImages.length === 0;
+                        };
+                        cell.appendChild(itemDeleteBtn);
+                    }
+
+                    if (!isMultiplicatorMode || i === 0) {
+                        const toolbar = document.createElement('div');
+                        toolbar.className = 'absolute top-1 right-1 flex flex-wrap bg-white/95 rounded shadow overflow-hidden z-20 text-[9px] font-medium border border-gray-200 max-w-[170px] p-0.5 gap-0.5 justify-end';
+
+                        const makeBtn = (text, title, onClick) => {
+                            const btn = document.createElement('button');
+                            btn.className = 'px-1.5 py-0.5 bg-gray-50 hover:bg-indigo-50 text-gray-700 border border-gray-200 rounded text-[9px] transition';
+                            btn.textContent = text;
+                            btn.title = title;
+                            btn.onclick = onClick;
+                            return btn;
+                        };
+
+                        toolbar.appendChild(makeBtn('🔄 Girar', 'Girar arte', async (e) => { e.stopPropagation(); imgData.isRotated = !imgData.isRotated; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('🪞 Inverter', 'Inverter horizontalmente', (e) => { e.stopPropagation(); imgData.flipped = !imgData.flipped; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('Tam. Real', 'Tamanho real proporcional', (e) => { e.stopPropagation(); imgData.mode = 'real'; imgData.offsetX = 0; imgData.offsetY = 0; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('↔️ Est. Lados', 'Esticar apenas largura', (e) => { e.stopPropagation(); imgData.mode = 'stretchH'; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('↕️ Est. Altura', 'Esticar apenas altura', (e) => { e.stopPropagation(); imgData.mode = 'stretchV'; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('Ajustar', 'Ajustar à célula', (e) => { e.stopPropagation(); imgData.mode = 'fit'; updatePreview(); }));
+                        toolbar.appendChild(makeBtn('✂️ Tesoura', 'Recorte interativo', (e) => { e.stopPropagation(); openCropModal(dataIndex); }));
+
+                        cell.appendChild(toolbar);
+                    }
+
+                    grid.appendChild(cell);
+                }
+                sheet.appendChild(grid);
+                previewContainer.appendChild(sheet);
             }
         }
 
         function openCropModal(index) {
             editingIndex = index;
             const imgData = loadedImages[index];
-
-            cropModalImg.src = imgData.src;
+            cropModalImg.src = imgData.originalSrc; 
             cropModalImg.onload = () => {
-                const wrapperW = cropAreaWrapper.clientWidth;
-                const wrapperH = cropAreaWrapper.clientHeight;
-                cropData.w = 200;
-                cropData.h = 250;
-                cropData.x = (wrapperW - cropData.w) / 2;
-                cropData.y = (wrapperH - cropData.h) / 2;
-                updateCropBoxUI();
+                cropData.w = 200; cropData.h = 250;
+                cropData.x = (cropAreaWrapper.clientWidth - 200) / 2;
+                cropData.y = (cropAreaWrapper.clientHeight - 250) / 2;
+                cropBox.style.left = `${cropData.x}px`;
+                cropBox.style.top = `${cropData.y}px`;
+                cropBox.style.width = `${cropData.w}px`;
+                cropBox.style.height = `${cropData.h}px`;
                 cropModal.classList.remove('hidden');
             };
         }
 
-        function updateCropBoxUI() {
-            cropBox.style.left = `${cropData.x}px`;
-            cropBox.style.top = `${cropData.y}px`;
-            cropBox.style.width = `${cropData.w}px`;
-            cropBox.style.height = `${cropData.h}px`;
-        }
-
         cropBox.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('crop-handle')) {
-                activeHandle = e.target.getAttribute('data-handle');
-            } else {
-                activeHandle = 'move';
-            }
-            startMouseX = e.clientX;
-            startMouseY = e.clientY;
-            startBoxX = cropData.x;
-            startBoxY = cropData.y;
-            startBoxW = cropData.w;
-            startBoxH = cropData.h;
+            activeHandle = e.target.classList.contains('crop-handle') ? e.target.getAttribute('data-handle') : 'move';
+            startMouseX = e.clientX; startMouseY = e.clientY;
+            startBoxX = cropData.x; startBoxY = cropData.y;
+            startBoxW = cropData.w; startBoxH = cropData.h;
             isCropping = true;
             e.stopPropagation();
         });
@@ -640,49 +681,20 @@
             if (!isCropping) return;
             const dx = e.clientX - startMouseX;
             const dy = e.clientY - startMouseY;
-            const wrapperW = cropAreaWrapper.clientWidth;
-            const wrapperH = cropAreaWrapper.clientHeight;
-
             if (activeHandle === 'move') {
-                cropData.x = Math.max(0, Math.min(wrapperW - cropData.w, startBoxX + dx));
-                cropData.y = Math.max(0, Math.min(wrapperH - cropData.h, startBoxY + dy));
+                cropData.x = startBoxX + dx;
+                cropData.y = startBoxY + dy;
             } else if (activeHandle === 'br') {
-                cropData.w = Math.max(50, Math.min(wrapperW - cropData.x, startBoxW + dx));
-                cropData.h = Math.max(50, Math.min(wrapperH - cropData.y, startBoxH + dy));
-            } else if (activeHandle === 'bl') {
-                const newW = Math.max(50, startBoxW - dx);
-                if (startBoxX + dx >= 0) {
-                    cropData.x = startBoxX + dx;
-                    cropData.w = newW;
-                }
-                cropData.h = Math.max(50, Math.min(wrapperH - cropData.y, startBoxH + dy));
-            } else if (activeHandle === 'tr') {
-                cropData.w = Math.max(50, Math.min(wrapperW - cropData.x, startBoxW + dx));
-                const newH = Math.max(50, startBoxH - dy);
-                if (startBoxY + dy >= 0) {
-                    cropData.y = startBoxY + dy;
-                    cropData.h = newH;
-                }
-            } else if (activeHandle === 'tl') {
-                const newW = Math.max(50, startBoxW - dx);
-                const newH = Math.max(50, startBoxH - dy);
-                if (startBoxX + dx >= 0) {
-                    cropData.x = startBoxX + dx;
-                    cropData.w = newW;
-                }
-                if (startBoxY + dy >= 0) {
-                    cropData.y = startBoxY + dy;
-                    cropData.h = newH;
-                }
+                cropData.w = startBoxW + dx;
+                cropData.h = startBoxH + dy;
             }
-            updateCropBoxUI();
+            cropBox.style.left = `${cropData.x}px`;
+            cropBox.style.top = `${cropData.y}px`;
+            cropBox.style.width = `${cropData.w}px`;
+            cropBox.style.height = `${cropData.h}px`;
         });
 
-        window.addEventListener('mouseup', () => {
-            isCropping = false;
-            activeHandle = null;
-        });
-
+        window.addEventListener('mouseup', () => { isCropping = false; });
         closeModalBtn.onclick = () => cropModal.classList.add('hidden');
         cancelCropBtn.onclick = () => cropModal.classList.add('hidden');
 
@@ -691,10 +703,7 @@
                 const imgData = loadedImages[editingIndex];
                 const displayedW = cropModalImg.clientWidth;
                 const displayedH = cropModalImg.clientHeight;
-                const naturalW = cropModalImg.naturalWidth;
-                const naturalH = cropModalImg.naturalHeight;
-                
-                const ratio = naturalW / displayedW;
+                const ratio = imgData.naturalW / displayedW;
 
                 const sx = (cropData.x - (cropAreaWrapper.clientWidth - displayedW) / 2) * ratio;
                 const sy = (cropData.y - (cropAreaWrapper.clientHeight - displayedH) / 2) * ratio;
@@ -702,136 +711,154 @@
                 const sh = cropData.h * ratio;
 
                 const canvas = document.createElement('canvas');
-                canvas.width = Math.round(sw);
-                canvas.height = Math.round(sh);
+                canvas.width = Math.round(sw); canvas.height = Math.round(sh);
                 const ctx = canvas.getContext('2d');
-
                 const img = new Image();
-                img.src = imgData.src;
+                img.src = imgData.originalSrc;
                 ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
                 imgData.mode = 'crop';
                 imgData.croppedSrc = canvas.toDataURL('image/jpeg', 0.95);
+                imgData.src = imgData.croppedSrc; 
+                imgData.naturalW = sw;
+                imgData.naturalH = sh;
+                imgData.offsetX = 0; imgData.offsetY = 0;
                 updatePreview();
             }
             cropModal.classList.add('hidden');
         };
 
-        function getProcessedImageForPdf(imgData) {
-            return new Promise((resolve) => {
-                const canvas = document.createElement('canvas');
-                const img = new Image();
-                img.src = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
-
-                img.onload = () => {
-                    if (imgData.isRotated) {
-                        canvas.width = img.height;
-                        canvas.height = img.width;
-                    } else {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-
-                    const ctx = canvas.getContext('2d');
-                    ctx.save();
-                    ctx.translate(canvas.width / 2, canvas.height / 2);
-                    if (imgData.isRotated) ctx.rotate(Math.PI / 2);
-                    if (imgData.flipped) ctx.scale(-1, 1);
-                    ctx.drawImage(img, -img.width / 2, -img.height / 2);
-                    ctx.restore();
-
-                    resolve(canvas.toDataURL('image/jpeg', 0.95));
-                };
-            });
-        }
-
+        // Geração do PDF final
         generatePdfBtn.addEventListener('click', async () => {
             if (loadedImages.length === 0) return;
-
-            const sampleRotated = loadedImages[0].isRotated || false;
-            const layout = calculateLayout(sampleRotated);
+            const layout = calculateLayout();
             const mmToPt = 2.83465;
-            const bgColor = sheetBgColor.value;
+            const scalePct = parseInt(scaleRange.value) / 100;
 
             const docDefinition = {
                 pageSize: { width: layout.paper.width * mmToPt, height: layout.paper.height * mmToPt },
                 pageOrientation: 'portrait',
                 pageMargins: [layout.marginLeft * mmToPt, layout.marginTop * mmToPt, 0, 0],
-                background: function() {
-                    return [{
-                        canvas: [
-                            {
-                                type: 'rect',
-                                x: 0,
-                                y: 0,
-                                w: layout.paper.width * mmToPt,
-                                h: layout.paper.height * mmToPt,
-                                color: bgColor
-                            }
-                        ]
-                    }];
-                },
+                background: () => [{
+                    canvas: [{ type: 'rect', x: 0, y: 0, w: layout.paper.width * mmToPt, h: layout.paper.height * mmToPt, color: sheetBgColor.value }]
+                }],
                 content: [],
                 defaultStyle: { font: 'Roboto' }
             };
 
             const qtyVal = parseInt(customQty.value);
-            const totalItemsToRender = (isCustomSizeActive && qtyVal > 0) ? qtyVal : loadedImages.length;
-            const totalPages = Math.ceil(totalItemsToRender / layout.perPage);
+            const isMultiplicatorMode = isCustomSizeActive && qtyVal > 0;
+            const totalPasses = isMultiplicatorMode ? 2 : Math.ceil(loadedImages.length / layout.perPage);
 
-            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                const startIndex = pageIndex * layout.perPage;
-                const endIndex = Math.min(startIndex + layout.perPage, totalItemsToRender);
+            for (let passIndex = 0; passIndex < totalPasses; passIndex++) {
                 let pageTableBody = [];
                 let currentRow = [];
+                const startIndex = isMultiplicatorMode ? 0 : (passIndex * layout.perPage);
+                const endIndex = isMultiplicatorMode ? layout.perPage : Math.min(startIndex + layout.perPage, loadedImages.length);
+
+                const hasCropMarks = isMultiplicatorMode && passIndex === 0;
 
                 for (let i = startIndex; i < endIndex; i++) {
-                    const imgData = loadedImages[0]; // Usa a mesma arte base para todas as cópias
-                    const itemLayout = calculateLayout(imgData.isRotated || false);
+                    const dataIndex = isMultiplicatorMode ? 0 : i;
+                    const imgData = loadedImages[dataIndex];
+                    if (!imgData) continue;
                     
-                    let imageSource = await getProcessedImageForPdf(imgData);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = layout.photoW * 10;
+                    canvas.height = layout.photoH * 10;
+
+                    ctx.fillStyle = bleedBgColor.value;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    let sourceSrc = (imgData.mode === 'crop' && imgData.croppedSrc) ? imgData.croppedSrc : imgData.src;
+                    if (imgData.isRotated) sourceSrc = await getRotatedImage(imgData);
+
+                    const img = new Image();
+                    img.src = sourceSrc;
+                    await new Promise(r => { img.onload = r; });
+
+                    if (imgData.mode === 'fit' || imgData.mode === 'stretchH' || imgData.mode === 'stretchV') {
+                        const dw = canvas.width * scalePct;
+                        const dh = canvas.height * scalePct;
+                        const dx = (canvas.width - dw) / 2;
+                        const dy = (canvas.height - dh) / 2;
+                        ctx.drawImage(img, dx, dy, dw, dh);
+                    } else {
+                        const cellW = canvas.width * scalePct;
+                        const cellH = canvas.height * scalePct;
+                        const natW = imgData.naturalW || img.naturalWidth;
+                        const natH = imgData.naturalH || img.naturalHeight;
+                        const ratio = Math.min(cellW / natW, cellH / natH);
+
+                        const renderW = natW * ratio;
+                        const renderH = natH * ratio;
+                        const offsetXPt = ((imgData.offsetX || 0) / 3.2) * (10 / layout.photoW);
+                        const offsetYPt = ((imgData.offsetY || 0) / 3.2) * (10 / layout.photoH);
+
+                        const dx = ((cellW - renderW) / 2) + offsetXPt;
+                        const dy = ((cellH - renderH) / 2) + offsetYPt;
+
+                        ctx.drawImage(img, dx, dy, renderW, renderH);
+                    }
+
+                    if (hasCropMarks) {
+                        ctx.strokeStyle = '#9ca3af'; 
+                        ctx.lineWidth = 1.0; 
+                        const len = 15; 
+
+                        // Canto Superior Esquerdo
+                        ctx.beginPath(); ctx.moveTo(0, len); ctx.lineTo(0, 0); ctx.lineTo(len, 0); ctx.stroke();
+                        // Canto Superior Direito
+                        ctx.beginPath(); ctx.moveTo(canvas.width - len, 0); ctx.lineTo(canvas.width, 0); ctx.lineTo(canvas.width, len); ctx.stroke();
+                        // Canto Inferior Esquerdo
+                        ctx.beginPath(); ctx.moveTo(0, canvas.height - len); ctx.lineTo(0, canvas.height); ctx.lineTo(len, canvas.height); ctx.stroke();
+                        // Canto Inferior Direito
+                        ctx.beginPath(); ctx.moveTo(canvas.width - len, canvas.height); ctx.lineTo(canvas.width, canvas.height); ctx.lineTo(canvas.width, canvas.height - len); ctx.stroke();
+                    }
 
                     currentRow.push({
-                        image: imageSource,
-                        width: itemLayout.photoW * mmToPt,
-                        height: itemLayout.photoH * mmToPt,
+                        image: canvas.toDataURL('image/jpeg', 0.95),
+                        width: layout.photoW * mmToPt,
+                        height: layout.photoH * mmToPt,
                         alignment: 'center'
                     });
 
-                    if (currentRow.length === itemLayout.cols || i === endIndex - 1) {
-                        while (currentRow.length < itemLayout.cols) {
-                            currentRow.push({ text: '', width: itemLayout.photoW * mmToPt });
+                    if (currentRow.length === layout.cols || i === endIndex - 1) {
+                        while (currentRow.length < layout.cols) {
+                            currentRow.push({ text: '', width: layout.photoW * mmToPt });
                         }
                         pageTableBody.push([...currentRow]);
                         currentRow = [];
                     }
                 }
 
+                const tableLayoutConfig = hasCropMarks ? {
+                    hLineWidth: () => 0.5,
+                    vLineWidth: () => 0.5,
+                    hLineColor: () => '#d1d5db',
+                    vLineColor: () => '#d1d5db',
+                    paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0
+                } : {
+                    hLineWidth: () => 0,
+                    vLineWidth: () => 0,
+                    hLineColor: () => null,
+                    vLineColor: () => null,
+                    paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 0, paddingBottom: () => 0
+                };
+
                 docDefinition.content.push({
-                    table: { 
-                        body: pageTableBody, 
-                        alignment: 'left' 
-                    },
-                    layout: {
-                        hLineWidth: function (i, node) { return 0.5; },
-                        vLineWidth: function (i, node) { return 0.5; },
-                        hLineColor: function (i, node) { return '#d1d5db'; },
-                        vLineColor: function (i, node) { return '#d1d5db'; },
-                        paddingLeft: function(i, node) { return 0; },
-                        paddingRight: function(i, node) { return 0; },
-                        paddingTop: function(i, node) { return 0; },
-                        paddingBottom: function(i, node) { return 0; }
-                    },
-                    alignment: 'left',
-                    margin: [0, 0, 0, 0]
+                    table: { body: pageTableBody },
+                    layout: tableLayoutConfig
                 });
 
-                if (pageIndex < totalPages - 1) {
+                if (passIndex < totalPasses - 1) {
                     docDefinition.content.push({ text: '', pageBreak: 'after' });
                 }
             }
 
-            pdfMake.createPdf(docDefinition).download(`layout_imposicao_${layout.paper.name}.pdf`);
+            const fileName = isMultiplicatorMode ? `gabarito_multiplicador_2_paginas_${layout.paper.name}.pdf` : `imposicao_completa_${layout.paper.name}.pdf`;
+            pdfMake.createPdf(docDefinition).download(fileName);
         });
     </script>
 </body>
