@@ -221,6 +221,7 @@
         };
 
         let loadedImages = []; 
+        let isCustomSizeActive = false;
         let editingIndex = null;
 
         const imageInput = document.getElementById('imageInput');
@@ -231,7 +232,6 @@
         const previewContainer = document.getElementById('previewContainer');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const statsInfo = document.getElementById('statsInfo');
-        const cursorTip = document.getElementById('cursorTip');
 
         const sheetBgColor = document.getElementById('sheetBgColor');
         const sheetBgColorText = document.getElementById('sheetBgColorText');
@@ -542,23 +542,8 @@
                         img.style.transform = imgData.flipped ? 'scaleX(-1)' : 'none';
                     }
 
-                    // APLICAÇÃO DOS MODOS INDEPENDENTES DE ESTIRAMENTO
                     if (imgData.mode === 'fit') {
                         img.className = 'absolute object-contain select-none pointer-events-none';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.left = '0px';
-                        img.style.top = '0px';
-                    } else if (imgData.mode === 'stretchH') {
-                        // Estica preenchendo toda a largura horizontal
-                        img.className = 'absolute object-fill select-none pointer-events-none';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.left = '0px';
-                        img.style.top = '0px';
-                    } else if (imgData.mode === 'stretchV') {
-                        // Estica preenchendo toda a altura vertical
-                        img.className = 'absolute object-fill select-none pointer-events-none';
                         img.style.width = '100%';
                         img.style.height = '100%';
                         img.style.left = '0px';
@@ -623,7 +608,7 @@
 
                     if (!isMultiplicatorMode || i === 0) {
                         const toolbar = document.createElement('div');
-                        toolbar.className = 'absolute top-1 right-1 flex flex-wrap bg-white/95 rounded shadow overflow-hidden z-20 text-[9px] font-medium border border-gray-200 max-w-[170px] p-0.5 gap-0.5 justify-end';
+                        toolbar.className = 'absolute top-1 right-1 flex flex-wrap bg-white/95 rounded shadow overflow-hidden z-20 text-[9px] font-medium border border-gray-200 max-w-[150px] p-0.5 gap-0.5 justify-end';
 
                         const makeBtn = (text, title, onClick) => {
                             const btn = document.createElement('button');
@@ -637,8 +622,6 @@
                         toolbar.appendChild(makeBtn('🔄 Girar', 'Girar arte', async (e) => { e.stopPropagation(); imgData.isRotated = !imgData.isRotated; updatePreview(); }));
                         toolbar.appendChild(makeBtn('🪞 Inverter', 'Inverter horizontalmente', (e) => { e.stopPropagation(); imgData.flipped = !imgData.flipped; updatePreview(); }));
                         toolbar.appendChild(makeBtn('Tam. Real', 'Tamanho real proporcional', (e) => { e.stopPropagation(); imgData.mode = 'real'; imgData.offsetX = 0; imgData.offsetY = 0; updatePreview(); }));
-                        toolbar.appendChild(makeBtn('↔️ Est. Lados', 'Esticar apenas largura', (e) => { e.stopPropagation(); imgData.mode = 'stretchH'; updatePreview(); }));
-                        toolbar.appendChild(makeBtn('↕️ Est. Altura', 'Esticar apenas altura', (e) => { e.stopPropagation(); imgData.mode = 'stretchV'; updatePreview(); }));
                         toolbar.appendChild(makeBtn('Ajustar', 'Ajustar à célula', (e) => { e.stopPropagation(); imgData.mode = 'fit'; updatePreview(); }));
                         toolbar.appendChild(makeBtn('✂️ Tesoura', 'Recorte interativo', (e) => { e.stopPropagation(); openCropModal(dataIndex); }));
 
@@ -778,7 +761,7 @@
                     img.src = sourceSrc;
                     await new Promise(r => { img.onload = r; });
 
-                    if (imgData.mode === 'fit' || imgData.mode === 'stretchH' || imgData.mode === 'stretchV') {
+                    if (imgData.mode === 'fit') {
                         const dw = canvas.width * scalePct;
                         const dh = canvas.height * scalePct;
                         const dx = (canvas.width - dw) / 2;
