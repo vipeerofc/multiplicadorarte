@@ -44,7 +44,7 @@
     <!-- Cabeçalho -->
     <header class="bg-indigo-600 text-white shadow-md py-4 px-6 mb-6">
         <h1 class="text-2xl font-bold">Gerador de Layout Gráfico - Estilo Illustrator Pro</h1>
-        <p class="text-indigo-200 text-sm">Imposição, Multiplicador, Margem 5mm, Ajustar Todos e Gabarito de 2 Páginas (Alta Resolução)</p>
+        <p class="text-indigo-200 text-sm">Imposição Inteligente, Ajuste Automático Paisagem/Retrato e Alta Resolução</p>
     </header>
 
     <!-- Conteúdo Principal -->
@@ -54,7 +54,7 @@
         <div class="bg-white p-6 rounded-xl shadow-md space-y-5 lg:col-span-1 sticky top-6 max-h-[90vh] overflow-y-auto">
             <h2 class="text-lg font-semibold border-b pb-2 text-indigo-700">1. Configurações & Prancheta</h2>
 
-            <!-- FOTO OU PDF DA ARTE (NO TOPO) -->
+            <!-- FOTO OU PDF DA ARTE -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <label class="block text-sm font-medium text-gray-700">Fotos ou PDFs da Arte</label>
@@ -69,10 +69,10 @@
                 </div>
             </div>
 
-            <!-- Botão Ajustar Todos os Arquivos -->
+            <!-- Botão Ajustar Todos os Arquivos (Com Auto-Orientação) -->
             <div>
                 <button id="adjustAllFilesBtn" class="w-full bg-emerald-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition duration-200 text-sm flex items-center justify-center gap-2 shadow-sm">
-                    <span>🖼️</span> <span>Ajustar Todos os Arquivos</span>
+                    <span>🖼️</span> <span>Ajustar Todos (Auto Paisagem/Retrato)</span>
                 </button>
             </div>
 
@@ -169,7 +169,7 @@
             </div>
 
             <p id="cursorTip" class="text-xs text-indigo-600 mb-3 bg-indigo-50 p-2 rounded border border-indigo-100">
-                💡 <strong>Dica:</strong> Use o botão <strong>"Ajustar Todos os Arquivos"</strong> para preencher o quadro de todas as fotos instantaneamente.
+                💡 <strong>Dica:</strong> O botão <strong>"Ajustar Todos"</strong> detecta se a foto é paisagem ou retrato e a orienta automaticamente para encaixar perfeitamente na grade!
             </p>
 
             <!-- Área de Preview -->
@@ -295,12 +295,23 @@
             eyeDropperBtn.style.display = 'none';
         }
 
-        // Botão Ajustar Todos os Arquivos
+        // LÓGICA INTELIGENTE: Ajustar Todos com Auto-Orientação Paisagem / Retrato
         adjustAllFilesBtn.onclick = () => {
-            loadedImages.forEach(img => {
-                img.mode = 'fit';
-                img.offsetX = 0;
-                img.offsetY = 0;
+            const pSize = getBasePhotoSize();
+            const targetIsLandscape = pSize.width > pSize.height;
+
+            loadedImages.forEach(imgData => {
+                imgData.mode = 'fit';
+                imgData.offsetX = 0;
+                imgData.offsetY = 0;
+
+                // Verifica se as dimensões da imagem original exigem rotação para combinar com a célula
+                const isImgLandscape = imgData.naturalW > imgData.naturalH;
+                if (isImgLandscape !== targetIsLandscape) {
+                    imgData.isRotated = true;
+                } else {
+                    imgData.isRotated = false;
+                }
             });
             updatePreview();
         };
@@ -382,7 +393,7 @@
             const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 3.0 }); // Alta qualidade na leitura do PDF original
+                const viewport = page.getViewport({ scale: 3.0 });
                 const canvas = document.createElement('canvas');
                 canvas.width = viewport.width; canvas.height = viewport.height;
                 await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
@@ -771,7 +782,7 @@
             cropModal.classList.add('hidden');
         };
 
-        // Geração do PDF final (Otimizado para Alta Resolução / Gráfica)
+        // Geração do PDF final (Alta Resolução e Alta Performance)
         generatePdfBtn.addEventListener('click', async () => {
             if (loadedImages.length === 0) return;
             const layout = calculateLayout();
@@ -809,8 +820,6 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // ALTA RESOLUÇÃO: Multiplicador de alta densidade (equivalente a aprox. 300 DPI)
-                    // Mantém a proporção exata da largura/altura em milímetros sem alterar o tamanho do layout
                     const highResMultiplier = 40; 
                     canvas.width = Math.round(layout.photoW * highResMultiplier);
                     canvas.height = Math.round(layout.photoH * highResMultiplier);
@@ -841,7 +850,6 @@
                         const renderW = natW * ratio;
                         const renderH = natH * ratio;
                         
-                        // Ajuste proporcional do deslocamento (pan) para a nova resolução do canvas
                         const offsetXPt = ((imgData.offsetX || 0) / 3.2) * (highResMultiplier / layout.photoW);
                         const offsetYPt = ((imgData.offsetY || 0) / 3.2) * (highResMultiplier / layout.photoH);
 
