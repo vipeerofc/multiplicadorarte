@@ -44,7 +44,7 @@
     <!-- Cabeçalho -->
     <header class="bg-indigo-600 text-white shadow-md py-4 px-6 mb-6">
         <h1 class="text-2xl font-bold">Gerador de Layout Gráfico - Estilo Illustrator Pro</h1>
-        <p class="text-indigo-200 text-sm">Imposição, Multiplicador, Margem 5mm, Ajustar Todos e Gabarito de 2 Páginas</p>
+        <p class="text-indigo-200 text-sm">Imposição, Multiplicador, Margem 5mm, Ajustar Todos e Gabarito de 2 Páginas (Alta Resolução)</p>
     </header>
 
     <!-- Conteúdo Principal -->
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- Botão Ajustar Todos os Arquivos (Acima do Multiplicador) -->
+            <!-- Botão Ajustar Todos os Arquivos -->
             <div>
                 <button id="adjustAllFilesBtn" class="w-full bg-emerald-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition duration-200 text-sm flex items-center justify-center gap-2 shadow-sm">
                     <span>🖼️</span> <span>Ajustar Todos os Arquivos</span>
@@ -93,7 +93,7 @@
                     <input type="color" id="sheetBgColor" value="#ffffff" class="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer p-1">
                     <input type="text" id="sheetBgColorText" value="#ffffff" class="flex-grow border border-gray-300 rounded-lg p-2 text-sm uppercase">
                     <button id="eyeDropperBtn" title="Conta-gotas (Capturar cor)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 px-3 py-2 rounded-lg text-sm flex items-center justify-center transition">
-                        pipeta
+                        Pipeta
                     </button>
                 </div>
             </div>
@@ -157,7 +157,7 @@
 
             <!-- Botão de Gerar PDF -->
             <button id="generatePdfBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 shadow disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                Gerar PDF Pronto
+                Gerar PDF Pronto (Alta Resolução)
             </button>
         </div>
 
@@ -382,12 +382,12 @@
             const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 2.0 });
+                const viewport = page.getViewport({ scale: 3.0 }); // Alta qualidade na leitura do PDF original
                 const canvas = document.createElement('canvas');
                 canvas.width = viewport.width; canvas.height = viewport.height;
                 await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
                 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
                 loadedImages.push({
                     name: `${file.name} - Pág ${i}`,
                     src: dataUrl,
@@ -453,7 +453,7 @@
                     ctx.rotate(Math.PI / 2);
                     if (imgData.flipped) ctx.scale(-1, 1);
                     ctx.drawImage(img, -img.width / 2, -img.height / 2);
-                    resolve(canvas.toDataURL('image/jpeg', 0.95));
+                    resolve(canvas.toDataURL('image/jpeg', 0.98));
                 };
             });
         }
@@ -760,7 +760,7 @@
                 ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
                 imgData.mode = 'crop';
-                imgData.croppedSrc = canvas.toDataURL('image/jpeg', 0.95);
+                imgData.croppedSrc = canvas.toDataURL('image/jpeg', 0.98);
                 imgData.src = imgData.croppedSrc; 
                 imgData.naturalW = sw;
                 imgData.naturalH = sh;
@@ -771,7 +771,7 @@
             cropModal.classList.add('hidden');
         };
 
-        // Geração do PDF final
+        // Geração do PDF final (Otimizado para Alta Resolução / Gráfica)
         generatePdfBtn.addEventListener('click', async () => {
             if (loadedImages.length === 0) return;
             const layout = calculateLayout();
@@ -808,8 +808,12 @@
                     
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = layout.photoW * 10;
-                    canvas.height = layout.photoH * 10;
+                    
+                    // ALTA RESOLUÇÃO: Multiplicador de alta densidade (equivalente a aprox. 300 DPI)
+                    // Mantém a proporção exata da largura/altura em milímetros sem alterar o tamanho do layout
+                    const highResMultiplier = 40; 
+                    canvas.width = Math.round(layout.photoW * highResMultiplier);
+                    canvas.height = Math.round(layout.photoH * highResMultiplier);
 
                     ctx.fillStyle = bleedBgColor.value;
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -836,8 +840,10 @@
 
                         const renderW = natW * ratio;
                         const renderH = natH * ratio;
-                        const offsetXPt = ((imgData.offsetX || 0) / 3.2) * (10 / layout.photoW);
-                        const offsetYPt = ((imgData.offsetY || 0) / 3.2) * (10 / layout.photoH);
+                        
+                        // Ajuste proporcional do deslocamento (pan) para a nova resolução do canvas
+                        const offsetXPt = ((imgData.offsetX || 0) / 3.2) * (highResMultiplier / layout.photoW);
+                        const offsetYPt = ((imgData.offsetY || 0) / 3.2) * (highResMultiplier / layout.photoH);
 
                         const dx = ((cellW - renderW) / 2) + offsetXPt;
                         const dy = ((cellH - renderH) / 2) + offsetYPt;
@@ -847,8 +853,8 @@
 
                     if (hasCropMarks) {
                         ctx.strokeStyle = '#9ca3af'; 
-                        ctx.lineWidth = 1.0; 
-                        const len = 15; 
+                        ctx.lineWidth = 1.5 * (highResMultiplier / 10); 
+                        const len = 15 * (highResMultiplier / 10); 
 
                         // Canto Superior Esquerdo
                         ctx.beginPath(); ctx.moveTo(0, len); ctx.lineTo(0, 0); ctx.lineTo(len, 0); ctx.stroke();
@@ -861,7 +867,7 @@
                     }
 
                     currentRow.push({
-                        image: canvas.toDataURL('image/jpeg', 0.95),
+                        image: canvas.toDataURL('image/jpeg', 0.98),
                         width: layout.photoW * mmToPt,
                         height: layout.photoH * mmToPt,
                         alignment: 'center'
